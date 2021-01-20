@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import AVFoundation
 
 class ViewController: UIViewController {
     
@@ -14,10 +15,11 @@ class ViewController: UIViewController {
     @IBOutlet weak var titleLabel: UILabel!
     @IBOutlet weak var progressBar: UIProgressView!
     
-    let eggTime = ["Soft" : 3 , "Medium" : 420 , "Hard" : 720]
+    let eggTime = ["Soft" : 300 , "Medium" : 420 , "Hard" : 720]
     var totalTime = 0
     var timePassed = 0
     var timer = Timer()
+    var player: AVAudioPlayer?
     
     
     override func viewDidLoad() {
@@ -27,7 +29,12 @@ class ViewController: UIViewController {
     
     @IBAction func hardnessSelected(_ sender: UIButton) {
         
+        titleLabel.text = "How do you like your eggs?"
+        totalTime = 0
+        timePassed =  0
+        progressBar.progress = 0
         timer.invalidate()
+        
         
         totalTime = eggTime[sender.currentTitle!]!
         
@@ -44,13 +51,9 @@ class ViewController: UIViewController {
         //example functionality
         if totalTime > timePassed {
             
-        
             timePassed += 1
-            print("totalTime\(totalTime)")
-            print("timePass\(timePassed)")
-
-          let  percentageProgress = Float(timePassed) / Float(totalTime)
-            print(percentageProgress)
+            
+            let  percentageProgress = Float(timePassed) / Float(totalTime)
             progressBar.progress = percentageProgress
             
             
@@ -58,7 +61,31 @@ class ViewController: UIViewController {
         }else{
             
             timer.invalidate()
+            playSound(soundName: "alarm_sound")
             titleLabel.text = "Done ! "
         }
     }
+    
+    func playSound(soundName : String ) {
+        guard let url = Bundle.main.url(forResource: soundName, withExtension: "mp3") else { return }
+        
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
+            try AVAudioSession.sharedInstance().setActive(true)
+            
+            /* The following line is required for the player to work on iOS 11. Change the file type accordingly*/
+            player = try AVAudioPlayer(contentsOf: url, fileTypeHint: AVFileType.mp3.rawValue)
+            
+            /* iOS 10 and earlier require the following line:
+             player = try AVAudioPlayer(contentsOf: url, fileTypeHint: AVFileTypeMPEGLayer3) */
+            
+            guard let player = player else { return }
+            
+            player.play()
+            
+        } catch let error {
+            print(error.localizedDescription)
+        }
+    }
+    
 }
